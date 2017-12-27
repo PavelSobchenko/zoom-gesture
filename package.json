@@ -1,0 +1,43 @@
+{
+  "name": "zoom-gesture",
+  "version": "0.1.0",
+  "description": "detects zoom gesture (mouse wheel or pinch) on DOM node",
+  "main": "index.js",
+  "scripts": {
+    "dev": "nodemon --exec 'npm run build' --watch zoom-gesture.js",
+    "build": "babel zoom-gesture.js -o index.js",
+    "prepublishOnly": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/igoradamenko/zoom-gesture.git"
+  },
+  "keywords": [
+    "zoom",
+    "pinch",
+    "gesture",
+    "mouse",
+    "wheel",
+    "touchmove",
+    "touch"
+  ],
+  "author": "Igor Adamenko <mail@igoradamenko.com> (http://igoradamenko.com)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/igoradamenko/zoom-gesture/issues"
+  },
+  "homepage": "https://github.com/igoradamenko/zoom-gesture#readme",
+  "babel": {
+    "presets": [
+      "env"
+    ]
+  },
+  "devDependencies": {
+    "babel-cli": "^6.24.1",
+    "babel-preset-env": "^1.5.2",
+    "nodemon": "^1.11.0"
+  },
+  "files": [
+    "index.js"
+  ]
+}
