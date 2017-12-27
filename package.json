@@ -1,6 +1,6 @@
 {
   "name": "zoom-gesture",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "detects zoom gesture (mouse wheel or pinch) on DOM node",
   "main": "index.js",
   "scripts": {
