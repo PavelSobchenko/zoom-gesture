@@ -34,14 +34,6 @@ class ZoomGesture {
     this.listeners = { change: [] };
   }
 
-  init() {
-    Object.keys(this.handlers).forEach(key => this.element.addEventListener(key, this.handlers[key]));
-  }
-
-  destroy() {
-    Object.keys(this.handlers).forEach(key => this.element.removeEventListener(key, this.handlers[key]));
-  }
-
   onWheel(e) {
     e.preventDefault();
     this.updateScale(this.scale + -e.deltaY / this.wheelScaleSize);
@@ -104,8 +96,18 @@ class ZoomGesture {
     this.listeners.change.forEach(fn => fn(this.scale));
   }
 
+  init() {
+    Object.keys(this.handlers).forEach(key => this.element.addEventListener(key, this.handlers[key]));
+  }
+
+  destroy() {
+    Object.keys(this.handlers).forEach(key => this.element.removeEventListener(key, this.handlers[key]));
+  }
+
   setScale(scale) {
     this.scale = scale;
+
+    this.listeners.change.forEach(fn => fn(this.scale));
   }
 
   on(event, callback) {
