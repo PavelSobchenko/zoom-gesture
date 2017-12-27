@@ -1,8 +1,5 @@
 'use strict';
 
-module.exports = ZoomGesture;
-export default ZoomGesture;
-
 class ZoomGesture {
   constructor({
     element = window,
@@ -122,3 +119,6 @@ class ZoomGesture {
     this.listeners[event] = this.listeners[event].filter(x => x !== callback);
   }
 }
+
+module.exports = ZoomGesture;
+export default ZoomGesture;
