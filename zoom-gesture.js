@@ -1,4 +1,5 @@
 'use strict';
+const DOUBLE_TAP_TIME = 300;
 
 class ZoomGesture {
   constructor({
@@ -8,16 +9,20 @@ class ZoomGesture {
     touchScaleSize,
     minScale = null,
     maxScale = null,
+    useDoubleTap = false,
+    useMouse = true
   } = {}) {
     this.element = element;
 
     this.handlers = {
-      wheel: this.onWheel.bind(this),
       touchstart: this.onTouchStart.bind(this),
       touchend: this.onTouchEnd.bind(this),
       touchmove: this.onTouchMove.bind(this),
       touchcancel: this.onTouchEnd.bind(this),
     };
+    if (useMouse) {
+      this.handlers.wheel = this.onWheel.bind(this);
+    }
 
     this.scale = initScale;
     this.wheelScaleSize = wheelScaleSize;
@@ -25,20 +30,73 @@ class ZoomGesture {
     this.minScale = minScale;
     this.maxScale = maxScale;
 
+    this.useDoubleTap = useDoubleTap;
+    this.lastTouchTime = null;
+
     this.touchIds = [];
     this.touchStartDistance = 0;
+    this.center = {x: 0, y: 0};
 
     this.listeners = { change: [] };
   }
 
-  onWheel(e) {
+  static cancelEvent(e) {
     e.preventDefault();
+    e.stopPropagation();
+  }
+
+  getVectorCenter(vectors) {
+    const container = this.element.parentNode || this.element;
+    const rect = container.getBoundingClientRect();
+
+    const scrollTop = document.documentElement.scrollTop || document.body.scrollTop;
+    const scrollLeft = document.documentElement.scrollLeft || document.body.scrollLeft;
+
+    const posTop = rect.top + scrollTop;
+    const posLeft = rect.left + scrollLeft;
+
+    vectors.forEach(vector => {
+        vector.x = (vector.x - posLeft) / this.scale;
+        vector.y = (vector.y - posTop) / this.scale;
+    });
+
+    const x = vectors.map(v => v.x).reduce((sum, curr) => sum + curr) / vectors.length;
+    const y = vectors.map(v => v.y).reduce((sum, curr) => sum + curr) / vectors.length;
+
+    return {
+      x: vectors.map(v => v.x).reduce((sum, curr) => sum + curr) / vectors.length,
+      y: vectors.map(v => v.y).reduce((sum, curr) => sum + curr) / vectors.length
+    };
+  }
+
+  onWheel(e) {
+    ZoomGesture.cancelEvent(e);
+    this.center = this.getVectorCenter([{x: e.pageX, y: e.pageY}]);
     this.updateScale(this.scale + -e.deltaY / this.wheelScaleSize);
   }
 
   onTouchStart(e) {
+    const vectors = Array.from(e.touches).map(touch => {
+      return {
+        x: touch.pageX,
+        y: touch.pageY
+      }
+    });
+    this.center = this.getVectorCenter(vectors);
+
     if (e.touches.length !== 2) {
-      this.touchIds = [];
+      if (this.useDoubleTap) {
+        const time = Date.now();
+
+        if (time - this.lastTouchTime <= DOUBLE_TAP_TIME) {
+          ZoomGesture.cancelEvent(e);
+          this.setScale(this.scale !== this.minScale ? this.minScale : this.maxScale);
+        }
+
+        this.lastTouchTime = time;
+      } else {
+        this.touchIds = [];
+      }
       return;
     }
 
@@ -59,7 +117,7 @@ class ZoomGesture {
 
   onTouchMove(e) {
     if (this.touchIds.length > 0) {
-      e.preventDefault();
+      ZoomGesture.cancelEvent(e);
 
       const currentDistance = this.getDistanceBetweenTouches(e.touches);
       const distanceScale = (currentDistance - this.touchStartDistance) / this.touchStartDistance;
@@ -82,6 +140,9 @@ class ZoomGesture {
   }
 
   updateScale(scale) {
+    const diff = scale - this.scale;
+    const offsetX = (this.center.x * diff) / this.scale;
+    const offsetY = (this.center.y * diff) / this.scale;
     this.scale = scale;
 
     if (typeof this.minScale === 'number' && this.scale < this.minScale) {
@@ -90,7 +151,11 @@ class ZoomGesture {
       this.scale = this.maxScale;
     }
 
-    this.listeners.change.forEach(fn => fn(this.scale));
+    this.listeners.change.forEach(fn => fn({
+      scale: this.scale,
+      offsetX: offsetX,
+      offsetY: offsetY
+    }));
   }
 
   init() {
@@ -102,9 +167,7 @@ class ZoomGesture {
   }
 
   setScale(scale) {
-    this.scale = scale;
-
-    this.listeners.change.forEach(fn => fn(this.scale));
+    this.updateScale(scale);
   }
 
   on(event, callback) {

@@ -14,6 +14,8 @@ const zoomHandler = new ZoomGesture({
   element: zoomNode,
   minScale: 1,
   maxScale: 2,
+  useDoubleTap: false, // detect double tap
+  useMouse: true // disable mouse wheel action
   // read more about options below
 });
 const fn = zoom => { /* some things with zoom */ };
@@ -74,6 +76,19 @@ Maximum value of `scale`.
 
 Default: `undefined`.
 
+### useDoubleTap
+
+Enable double tap.
+If enable, when double tap gonna happen, if current scale value not equal minimum value, will scale to minimal.
+
+Default: `false`
+
+### useMouse
+
+Enable mouse wheel event
+
+Default: `true`
+
 ## Methods
 
 ### init
@@ -127,6 +142,8 @@ when `scale` value is changed by user's zoom gesture.
 
 *Parameters passed to handler*:
 - `scale` (numeric).
+- `offsetX` (numeric).
+- `offsetY` (numeric).
 
 ## Why?
 
